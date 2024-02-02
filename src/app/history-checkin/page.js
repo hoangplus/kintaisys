@@ -98,10 +98,9 @@ const HistoryCheckin = () => {
       let month = selectMonth == 1 ? 12 : selectMonth - 1;
       let monthString = (month < 10 ? "0" : "") + Math.abs(month);
       let year =
-        selectMonth == 1 && currentDate.getMonth() == 0
-          ? currentDate.getFullYear() - 1
-          : currentDate.getFullYear();
-
+        (selectMonth == 1 && currentDate.getMonth() == 11 && currentDate.getDate() <= 26 || selectMonth != 1)
+          ? currentDate.getFullYear()
+          : currentDate.getFullYear() - 1;
       const startDay = moment(`${year}-${monthString}-${listDate[0]}`);
       const renderList = [];
       for (let index = 0; index < listDate.length; index++) {

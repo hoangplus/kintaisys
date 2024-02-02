@@ -278,7 +278,8 @@ const ModalDayOff = ({ isOpen, closeModal, dataList }) => {
       <div className="flex mt-20">
         <button
           onClick={addRequestPostToSheet}
-          className="text-white bg-orange-color py-[1rem] px-[2rem] rounded-2xl max-md:w-[20rem] mx-10"
+          className={`${items?.length == 0 ? `bg-gray-color` : `bg-orange-color`} text-white py-[1rem] px-[2rem] rounded-2xl max-md:w-[20rem] mx-10`}
+          disabled={items?.length == 0}
         >
           Request Time Off
         </button>
