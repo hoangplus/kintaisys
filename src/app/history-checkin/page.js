@@ -189,7 +189,7 @@ const HistoryCheckin = () => {
                     moment().diff(item?.date) >= 0 && (
                       <tr className="py-2 h-20" key={item.key}>
                         <td className={`leading-7 text-[1.2rem] td-checkin`}>
-                          {item?.date && moment(item?.date).format("DD/MM/YYY")}
+                          {item?.date && moment(item?.date).format("DD/MM/YYYY")}
                         </td>
                         {item.checkInHistory.map((data) => (
                           <td className={`leading-7 td-checkin ${(data.total == 'w' && data.checkin == 'w')
