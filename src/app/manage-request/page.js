@@ -355,7 +355,12 @@ const ManageRequest = () => {
 
   return (
     <div className="my-16 max-md:my-10">
-      <h4 className="uppercase font-semibold mt-10">Manage leave requests</h4>
+      <div className="flex justify-between items-center">
+        <h4 className="uppercase font-semibold mt-10">Manage leave requests</h4>
+        {dataList?.length > 0 && <p className="border-b-4 border-orange-color py-2 font-semibold max-md:text-[1.2rem] max-md:w-[12rem] h-[2.5rem]">
+          Total number of requests: {dataList?.length}
+        </p>}
+      </div>
       <div className="table-container-manager">
         <table className="table-fixed w-full text-center rounded-t-xl mt-5">
           <thead className="text-primary-color text-[1.8rem] font-semibold max-md:text-[1.3rem]">
