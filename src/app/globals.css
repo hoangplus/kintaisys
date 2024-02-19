@@ -180,6 +180,20 @@ button {
   height: 20px;
 }
 
+.text-ellipsis-100-reason {
+  width: 100%;
+  white-space: pre-line;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 100%;
+  max-height: 50px;
+  padding-bottom: 5px;
+}
+
+.text-reason-title {
+  width: 70px;
+}
+
 .text-ellipsis-wrap {
   width: 100%;
   white-space: nowrap;
@@ -245,7 +259,7 @@ table {
 }
 
 .expanded {
-  height: 80px;
+  height: max-content;
   transition: height 0.32s ease-in;
   opacity: 1;
 }

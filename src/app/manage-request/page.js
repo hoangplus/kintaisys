@@ -22,6 +22,7 @@ import {
 } from "@/constants";
 import { v4 as uuidv4 } from "uuid";
 import { setListUserInfo } from '../GlobalRedux/reducers/listuser.reducer';
+import { setListRequest } from '../GlobalRedux/reducers/listRequest.reducer';
 import { setUserInfo } from '../GlobalRedux/reducers/user.reducer';
 
 const ManageRequest = () => {
@@ -312,6 +313,7 @@ const ManageRequest = () => {
           item.name = userFind.name;
         }
         setDataList(listRequest);
+        dispatch(setListRequest(listRequest));
         setDataListInitial(result?.data?.values)
         setLoading(false);
       })
@@ -427,9 +429,9 @@ const ManageRequest = () => {
                         <p className="">Date:</p>
                         <p className="">{item?.date}</p>
                       </div>
-                      <div className="flex my-2 gap-2 text-ellipsis-100">
-                        <p className="">Reason:</p>
-                        <p className="text-start text-ellipsis-100">{item?.reason}</p>
+                      <div className="flex my-2 gap-2 text-ellipsis-100-reason">
+                        <p className="text-reason-title">Reason:</p>
+                        <p className="text-start text-ellipsis-100-reason">{item?.reason}</p>
                       </div>
                     </div>
                     <div className="flex wrap-mamage-comment">

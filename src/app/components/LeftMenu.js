@@ -6,16 +6,21 @@ import {
   readData,
   tableToJson
 } from '@/utils/spreadsheet';
+import {
+  SHEET_MEMBER
+} from "@/constants";
+import { useSelector } from "react-redux";
 
 const LeftMenu = () => {
   const { data, update } = useSession();
   const router = useRouter();
   const pathname = usePathname()
   const [userInfo, setUserInfo] = useState(null);
+  const listRequest = useSelector((state) => state.listRequest.listRequest);
 
   useEffect(() => {
     if (data && !userInfo) {
-      readData('members')
+      readData(SHEET_MEMBER)
         .then((result) => {
           const jsonData = tableToJson(result?.data?.values);
 
@@ -46,6 +51,7 @@ const LeftMenu = () => {
         <div className="flex items-center w-full justify-between">
           <div className="flex flex-col">
             <h3 className="font-bold mb-3">{data?.user.name}</h3>
+            {userInfo?.role === "admin" && <p className="text-red-color">{listRequest?.length} requests</p>}
           </div>
           <i className="fa-solid fa-chevron-right"></i>
         </div>
