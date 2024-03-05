@@ -1,5 +1,6 @@
 import ReactModal from 'react-modal';
 import { useState, useEffect } from 'react';
+import { useSelector } from "react-redux";
 import DatePicker from 'react-datepicker';
 import moment from 'moment';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -35,6 +36,12 @@ const ModalDayOff = ({ isOpen, closeModal, dataList }) => {
   const [errMessageDate, setErrMessageDate] = useState(false);
   const { data, update } = useSession();
   const [loading, setLoading] = useState(false);
+  const [selectedOptionRadio, setSelectedOptionRadio] = useState(true);
+  const userInfo = useSelector((state) => state.user.userInfo);
+
+  const handleSelectChangeRadio = (event) => {
+    setSelectedOptionRadio(!selectedOptionRadio);
+  };
 
   const handleDateChange = (dates) => {
     setErrMessageDate(false)
@@ -60,6 +67,9 @@ const ModalDayOff = ({ isOpen, closeModal, dataList }) => {
       id: uuidv4(),
       email: data.user.email,
       type: selectedOption,
+      is_read_admin: '',
+      is_read: userInfo?.role == 'admin' ? false : true,
+      is_paid_leave: selectedOptionRadio,
       reason: textValue,
       date: (!endDate || startDateFormat === endDateFormat)
         ? `${startDateFormat}` : `${startDateFormat} - ${endDateFormat}`
@@ -115,7 +125,7 @@ const ModalDayOff = ({ isOpen, closeModal, dataList }) => {
     setLoading(true);
     const callbacks = {
       onSuccess: (newToken) => {
-        wirteRequest(items, newToken ? newToken : data.accessToken)
+        wirteRequest(items, newToken ? newToken : data.accessToken, userInfo)
           .then((res) => {
             toast.success("Update successful", {
               position: toast.POSITION.TOP_CENTER,
@@ -192,6 +202,7 @@ const ModalDayOff = ({ isOpen, closeModal, dataList }) => {
             <option value="0">Morning Off</option>
             <option value="1">Afternoon Off</option>
           </select>
+
           {errMessageDate && <div className="w-100 place-items-center ml-auto">
             <p className="font-semibold text-red-color">Your date has already been selected</p>
           </div>}
@@ -236,6 +247,32 @@ const ModalDayOff = ({ isOpen, closeModal, dataList }) => {
             </div>
           </div>
         </div>
+
+        <div className="ml-24 my-10 flex gap-5">
+          <div className="flex gap-2">
+            <input
+              type="radio"
+              value={selectedOptionRadio}
+              checked={selectedOptionRadio}
+              onChange={handleSelectChangeRadio}
+            />
+            <label>
+              Paid leave
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="radio"
+              value={!selectedOptionRadio}
+              checked={!selectedOptionRadio}
+              onChange={handleSelectChangeRadio}
+            />
+            <label>
+              Unpaid leave
+            </label>
+          </div>
+        </div>
+
         <div className="flex justify-center gap-20 my-10">
           <button
             onClick={addDayOff}

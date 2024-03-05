@@ -8,6 +8,7 @@ import {
   REQUEST_STATUS,
 } from "../constants";
 import { jwtDecode } from "jwt-decode";
+import moment from "moment";
 
 export const readData = async (sheetName) => {
   return axios.get(
@@ -46,7 +47,15 @@ export const tableToJson = (table) => {
   for (let i = 1; i < table.length; i++) {
     const rowData = {};
     for (let j = 0; j < headers.length; j++) {
-      rowData[headers[j]] = table[i][j];
+      let value = table[i][j];
+      if (typeof value === "string") {
+        if (value.trim().toUpperCase() == "TRUE") {
+          value = true;
+        } else if (value.trim().toUpperCase() == "FALSE") {
+          value = false;
+        }
+      }
+      rowData[headers[j]] = value;
     }
     jsonData.push(rowData);
   }
@@ -75,11 +84,21 @@ export const getColumnLetter = (index) => {
   return columnLetter;
 };
 
-export const wirteRequest = (requests, accessToken) => {
+export const wirteRequest = (requests, accessToken, userInfo) => {
   const range = SHEET_REQUEST_OFF; // specify the sheet name
   const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}:append?key=${API_KEY}`;
   const rowsToAdd = requests.map((item) => ({
-    values: [item.id, item.email, item.date, item.type.toString(), item.reason, REQUEST_STATUS.PENDING],
+    values: [
+      item.id,
+      item.email,
+      item.date,
+      item.type.toString(),
+      item.reason,
+      userInfo?.role === 'admin' ? REQUEST_STATUS.APPROVE : REQUEST_STATUS.PENDING,
+      item.is_read_admin,
+      item.is_read,
+      item.is_paid_leave
+    ],
   }));
   return axios.post(
     apiUrl,
@@ -161,5 +180,24 @@ export const updateData = (callbacks, data, update) => {
     } else {
       callbacks.onFail()
     }
+  }};
+
+export const getCellNameTotalTime = (email, dateTime, listUser) => {
+  const startIndex = 7;
+  let userIndex = listUser.findIndex((item) => item.email == email);
+  const date = moment(dateTime, "DD-MM-YYYY");
+  if (userIndex == -1 || !date.isValid()) return null;
+  let startDate = null;
+  if (date.date() > 25) {
+    startDate = date.clone().date(26);
+  } else {
+    startDate = date.clone().add(-1, "months").date(26);
   }
+  const month = startDate.month() + 2 > 12 ? 1 : startDate.month() + 2;
+  const diffDays = date.diff(startDate, "days");
+  const columnName = getColumnLetter(diffDays + 2);
+  const rowIndex = startIndex + userIndex;
+  const position = `${columnName}${rowIndex}`;
+  const range = `${month}:${position}`;
+  return range;
 };

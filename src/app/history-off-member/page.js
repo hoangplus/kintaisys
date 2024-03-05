@@ -49,7 +49,21 @@ const HistoryOff = () => {
   return (
     <div>
       {loading ? <Loading /> : <div className="my-16 max-md:my-10">
-      <h4 className="uppercase font-semibold mt-10">History day off</h4>
+        <div className="flex my-10">
+          <h4 className="uppercase font-semibold mt-10">History day off</h4>
+          <div className="flex items-end ml-8">
+            <div className="w-[4.5rem] h-[4.2rem] background-paid border-2 border-border-color max-md:w-[2.8rem] max-md:h-[2.6rem]"></div>
+            <p className="ml-3 font-[1.8rem] font-semibold text-primary-color">
+              Paid Leave
+            </p>
+          </div>
+          <div className="flex items-end ml-8">
+            <div className="w-[4.5rem] h-[4.2rem] background-unpaid border-2 border-border-color max-md:w-[2.8rem] max-md:h-[2.6rem]"></div>
+            <p className="ml-3 font-[1.8rem] font-semibold text-primary-color">
+              Unpaid Leave
+            </p>
+          </div>
+        </div>
         <div className="table-container-manager">
           <table className="table-fixed w-full text-center rounded-t-xl mt-5">
             <thead className="text-primary-color text-[1.8rem] font-semibold max-md:text-[1.3rem]">
@@ -62,7 +76,7 @@ const HistoryOff = () => {
             </thead>
             <tbody className="divide-y divide-second-color text-[1.6rem] text-primary-color font-medium max-md:text-[1.3rem] overflow-y-auto">
               {dataList?.map((item) => (
-                <tr key={item.id} className="py-2 h-20">
+                <tr key={item.id} className={`py-2 h-20 ${!item?.is_paid_leave ? 'background-unpaid' : ''}`}>
                   <td className={`leading-7 text-red-color`}>
                     <div className="flex items-center">
                       <img src={data?.user?.image ? data?.user?.image : `/user.png`} alt="avatar" className="bg-white rounded-full mr-4 shrink-0 avatar-manage" />

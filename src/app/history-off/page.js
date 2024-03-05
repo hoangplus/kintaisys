@@ -95,6 +95,20 @@ const HistoryOff = () => {
               </option>
             ))}
           </select>
+          <div className="flex my-10">
+            <div className="flex items-end ml-8">
+              <div className="w-[4.5rem] h-[4.2rem] background-paid border-2 border-border-color max-md:w-[2.8rem] max-md:h-[2.6rem]"></div>
+              <p className="ml-3 font-[1.8rem] font-semibold text-primary-color">
+                Paid Leave
+              </p>
+            </div>
+            <div className="flex items-end ml-8">
+              <div className="w-[4.5rem] h-[4.2rem] background-unpaid border-2 border-border-color max-md:w-[2.8rem] max-md:h-[2.6rem]"></div>
+              <p className="ml-3 font-[1.8rem] font-semibold text-primary-color">
+                Unpaid Leave
+              </p>
+            </div>
+          </div>
           {resultDayOff?.length === 1 && <p className="border-b-4 border-orange-color py-2 font-semibold max-md:text-[1.2rem] max-md:w-[12rem] h-[2.5rem]">
             Number of days off: {resultDayOff[0]?.dayoff}
           </p>}
@@ -111,7 +125,7 @@ const HistoryOff = () => {
             </thead>
             <tbody className="divide-y divide-second-color text-[1.6rem] text-primary-color font-medium max-md:text-[1.3rem] overflow-y-auto">
               {filteredData?.map((item) => (
-                <tr key={item.id} className="py-2 h-20">
+                <tr key={item.id} className={`py-2 h-20 ${!item?.is_paid_leave ? 'background-unpaid' : ''}`}>
                   <td className={`leading-7 text-red-color`}>
                     <div className="flex items-center">
                       <img src={item?.image ? item?.image : `/user.png`} alt="avatar" className="bg-white rounded-full mr-4 shrink-0 avatar-manage" />

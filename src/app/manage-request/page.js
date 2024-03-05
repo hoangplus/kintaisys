@@ -48,7 +48,8 @@ const ManageRequest = () => {
     for (const row of originalLst) {
       if(row[0] === item.id) {
         row[5] = REQUEST_STATUS.REJECT;
-        row[6] = item.comment;
+        row[6] = true;
+        row[9] = item.comment;
         break;
       }
     }
@@ -86,7 +87,8 @@ const ManageRequest = () => {
     for (const row of originalLst) {
       if(row[0] === item.id) {
         row[5] = REQUEST_STATUS.APPROVE;
-        row[6] = item.comment;
+        row[6] = true;
+        row[9] = item.comment;
         break;
       }
     }
@@ -105,17 +107,29 @@ const ManageRequest = () => {
 
     const userFind = listUserInfo?.find(user => user.email === item.email)
     const decimalNumber = parseFloat(userFind?.dayoff.replace(',', '.'));
+    const decimalNumberUnPaid = parseFloat(userFind?.dayoff_unpaid_leave.replace(',', '.'));
 
     let addOneDay = decimalNumber + (1 * (endDateString ? totalDays : 1));
     let addHalfDay = decimalNumber + (0.5 * (endDateString ? totalDays : 1));
 
+    let addOneDayUnPaid = decimalNumberUnPaid + (1 * (endDateString ? totalDays : 1));
+    let addHalfDayUnPaid = decimalNumberUnPaid + (0.5 * (endDateString ? totalDays : 1));
+
     let memberList = [...dataMemberInitial]
     for (const row of memberList) {
-      if(row[2] === item.email) {
-        if(item?.type === '2') {
-          row[3] = addOneDay
+      if (row[2] === item.email) {
+        if (item?.type === '2') {
+          if (!item.is_paid_leave) {
+            row[4] = addOneDayUnPaid
+          } else {
+            row[3] = addOneDay
+          }
         } else {
-          row[3] = addHalfDay;
+          if (!item.is_paid_leave) {
+            row[4] = addHalfDayUnPaid
+          } else {
+            row[3] = addHalfDay
+          }
         }
         break;
       }
@@ -159,7 +173,8 @@ const ManageRequest = () => {
       const requestDetail = dataList.find(request => request.id === row[0]);
       if(requestDetail?.isChecked) {
         row[5] = REQUEST_STATUS.REJECT;
-        row[6] = requestDetail.comment;
+        row[6] = true;
+        row[9] = requestDetail.comment;
       }
     }
     const dataRange = [
@@ -197,7 +212,8 @@ const ManageRequest = () => {
       const requestDetail = dataList.find(request => request.id === row[0]);
       if(requestDetail?.isChecked) {
         row[5] = REQUEST_STATUS.APPROVE;
-        row[6] = requestDetail.comment;
+        row[6] = true;
+        row[9] = requestDetail.comment;
       }
     }
    
@@ -223,9 +239,17 @@ const ManageRequest = () => {
           const addHalfDay = (0.5 * (endDateString ? totalDays : 1));
   
           if (requestDetail.type === '2') {
-            row[3] = Number(row[3]) + addOneDay
+            if (!requestDetail.is_paid_leave) {
+              row[4] = Number(row[4]) + addOneDay
+            } else {
+              row[3] = Number(row[3]) + addOneDay
+            }
           } else {
-            row[3] = Number(row[3]) + addHalfDay
+            if (!requestDetail.is_paid_leave) {
+              row[4] = Number(row[4]) + addHalfDay
+            } else {
+              row[3] = Number(row[3]) + addHalfDay
+            }
           }
         }
       })
@@ -264,7 +288,7 @@ const ManageRequest = () => {
   }
 
   const handleTextChange = (id, text) => {
-    const newLst = [...dataList];
+    const newLst = JSON.parse(JSON.stringify(dataList));
     for (const request of newLst) {
       if(request.id === id) {
         request.comment = text;
@@ -284,7 +308,7 @@ const ManageRequest = () => {
     });
   }
   const handleCheckboxChange = (id, isChecked) => {
-    const newLst = [...dataList];
+    const newLst = JSON.parse(JSON.stringify(dataList));
     for (const request of newLst) {
       if(request.id === id) {
         request.isChecked = isChecked;
@@ -294,12 +318,13 @@ const ManageRequest = () => {
     setDataList(newLst)
   };
   const handleSelectAll = (isChecked) => {
-    const newLst = [...dataList];
+    const newLst = JSON.parse(JSON.stringify(dataList));
     for (const item of newLst) {
       item.isChecked = isChecked;
     }
     setDataList(newLst)
   };
+
   const getData = async () => {
     setLoading(true);
     readData(SHEET_REQUEST_OFF)
@@ -359,6 +384,20 @@ const ManageRequest = () => {
     <div className="my-16 max-md:my-10">
       <div className="flex justify-between items-center">
         <h4 className="uppercase font-semibold mt-10">Manage leave requests</h4>
+        <div className="flex my-10">
+          <div className="flex items-end ml-8">
+            <div className="w-[4.5rem] h-[4.2rem] background-paid border-2 border-border-color max-md:w-[2.8rem] max-md:h-[2.6rem]"></div>
+            <p className="ml-3 font-[1.8rem] font-semibold text-primary-color">
+              Paid Leave
+            </p>
+          </div>
+          <div className="flex items-end ml-8">
+            <div className="w-[4.5rem] h-[4.2rem] background-unpaid border-2 border-border-color max-md:w-[2.8rem] max-md:h-[2.6rem]"></div>
+            <p className="ml-3 font-[1.8rem] font-semibold text-primary-color">
+              Unpaid Leave
+            </p>
+          </div>
+        </div>
         {dataList?.length > 0 && <p className="border-b-4 border-orange-color py-2 font-semibold max-md:text-[1.2rem] max-md:w-[12rem] h-[2.5rem]">
           Total number of requests: {dataList?.length}
         </p>}
@@ -370,7 +409,7 @@ const ManageRequest = () => {
               <th className="h-[5.6rem] sticky top-0 bg-second-color max-md:h-[5rem] w-[5rem]">
                 <input type="checkbox" onChange={(e) => handleSelectAll(e.target.checked)} checked={isCheckedItem} className="ml-5" />
               </th>
-              <th className="sticky top-0 bg-second-color relative z-50">
+              <th className="sticky top-0 bg-second-color z-50">
                 <div className="flex items-center gap-5 justify-end p-5">
                   <button
                     className={`${isCheckedItem ? `text-white bg-orange-color` : `text-white bg-loading-color`}
@@ -394,7 +433,7 @@ const ManageRequest = () => {
           </thead>
           <tbody className="divide-y divide-second-color text-[1.6rem] text-primary-color font-medium max-md:text-[1.3rem] overflow-y-auto">
             {dataList?.map((item, index) => (
-              <tr key={item.id} className="py-2 h-20">
+              <tr key={item.id} className={`py-2 h-20 ${!item?.is_paid_leave ? 'background-unpaid' : ''}`}>
                 <td>
                   <div className="flex">
                     {extendBox.includes(item.id) ? <img src="/icon-up.png" alt="My Image" width="12" height="12" />

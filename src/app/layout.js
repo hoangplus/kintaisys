@@ -38,10 +38,10 @@ export default function RootLayout({ children, session }) {
         <SessionProvider session={session}>
           {pathname !== '/login' ? 
             <Providers>
-              <div className="flex max-md:flex-col">
+              <div className="flex max-md:flex-col relative">
                 <LeftMenu />
                 <div className="flex-1 px-6 py-10 h-screen w-content-full">
-                  {(pathname !== '/manage-request' && pathname !== '/history-off' && pathname !== '/history-checkin') && <Header />}
+                  <Header />
                   {children}
                 </div>
               </div>

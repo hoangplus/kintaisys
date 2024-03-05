@@ -110,11 +110,25 @@ const RequestOff = () => {
             width="12"
             height="12"
           />
-          Add Request
+          Add Request 
         </button>
       </div>
 
-      <h4 className="uppercase font-semibold mt-10">List time off</h4>
+      <div className="flex my-10">
+        <h4 className="uppercase font-semibold mt-10">List time off</h4>
+        <div className="flex items-end ml-8">
+          <div className="w-[4.5rem] h-[4.2rem] background-paid border-2 border-border-color max-md:w-[2.8rem] max-md:h-[2.6rem]"></div>
+          <p className="ml-3 font-[1.8rem] font-semibold text-primary-color">
+            Paid Leave
+          </p>
+        </div>
+        <div className="flex items-end ml-8">
+          <div className="w-[4.5rem] h-[4.2rem] background-unpaid border-2 border-border-color max-md:w-[2.8rem] max-md:h-[2.6rem]"></div>
+          <p className="ml-3 font-[1.8rem] font-semibold text-primary-color">
+            Unpaid Leave
+          </p>
+        </div>
+      </div>
 
       <div className="table-container">
         <table className="table-fixed w-full text-center rounded-t-xl mt-5">
@@ -129,7 +143,7 @@ const RequestOff = () => {
           </thead>
           <tbody className="divide-y divide-second-color text-[1.6rem] text-primary-color font-medium max-md:text-[1.3rem] overflow-y-auto">
             {dataList?.map((item) => (
-              <tr key={item.id} className="py-2 h-20">
+              <tr key={item.id} className={`py-2 h-20 ${item?.is_paid_leave ? '' : 'background-unpaid'}`}>
                 <td className={`leading-7 text-red-color`}>{item.date}</td>
                 <td>
                   <p
