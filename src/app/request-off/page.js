@@ -6,7 +6,6 @@ import {
   refreshToken,
   tableToJson,
   updateStatusRequest,
-  wirteRequest,
   updateData
 } from "@/utils/spreadsheet";
 import moment from "moment";
@@ -23,8 +22,7 @@ const RequestOff = () => {
   const [listRequestAll, setListRequestAll] = useState([]);
   const { data, update } = useSession();
   const [loading, setLoading] = useState(false);
-  const [checkinIndex, setCheckinIndex] = useState(-1);
-
+  const [dataListInitial, setDataListInitial] = useState([]);
   const userInfo = useSelector((state) => state.user.userInfo);
 
   const handleRequestDayOff = () => {
@@ -43,6 +41,7 @@ const RequestOff = () => {
         const listRequest = jsonData.filter(
           (item) => item.email == userInfo.email
         );
+        setDataListInitial(result?.data?.values);
         setDataList(listRequest.reverse());
         setLoading(false);
       })
@@ -232,6 +231,7 @@ const RequestOff = () => {
         dataList={dataList}
         isOpen={isOpenModal}
         closeModal={closeModal}
+        dataListInitial={dataListInitial}
       />
       {loading && <Loading />}
     </div>

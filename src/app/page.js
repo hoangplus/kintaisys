@@ -155,7 +155,10 @@ const Home = () => {
           selectMonth == currentMonth &&
           lstDate[index] == currentDate.getDate()
         ) {
-          if (!lstCheckIn[index] || lstCheckIn[index].toUpperCase() == 'W') {
+          if(lstTime[index] && lstTime[index].toUpperCase() == 'O') {
+            setCheckInStatus('2');
+          }
+          else if (!lstCheckIn[index] || lstCheckIn[index].toUpperCase() == 'W') {
             setCheckInStatus('0');
           } else if (!lstCheckOut[index] || lstCheckOut[index].toUpperCase() == 'W') {
             setCheckInStatus('1');

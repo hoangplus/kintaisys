@@ -5,24 +5,25 @@ import DatePicker from 'react-datepicker';
 import moment from 'moment';
 import 'react-datepicker/dist/react-datepicker.css';
 import { v4 as uuidv4 } from "uuid";
-import { 
+import {
   convertArrayList,
   convertArraySplitDayList,
   convertArrayModal,
-  convertArraySplitDayModal
+  convertArraySplitDayModal,
 } from "@/utils/convertArray";
 import {
-  refreshToken,
   wirteRequest,
-  updateData
+  updateData,
+  writeDataToMultipleSheets,
+  getRangeRequests,
 } from "@/utils/spreadsheet";
-import { useSession, signOut } from 'next-auth/react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useSession, signOut } from "next-auth/react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Loading from "../loading";
-import { jwtDecode } from "jwt-decode";
+import { REQUEST_STATUS, SHEET_REQUEST_OFF } from "@/constants";
 
-const ModalDayOff = ({ isOpen, closeModal, dataList }) => {
+const ModalDayOff = ({ isOpen, closeModal, dataList, dataListInitial }) => {
   if (!isOpen) {
     return null;
   }
@@ -38,6 +39,7 @@ const ModalDayOff = ({ isOpen, closeModal, dataList }) => {
   const [loading, setLoading] = useState(false);
   const [selectedOptionRadio, setSelectedOptionRadio] = useState(true);
   const userInfo = useSelector((state) => state.user.userInfo);
+  const listUserInfo = useSelector((state) => state.listUser.listUserInfo);
 
   const handleSelectChangeRadio = (event) => {
     setSelectedOptionRadio(!selectedOptionRadio);
@@ -67,34 +69,39 @@ const ModalDayOff = ({ isOpen, closeModal, dataList }) => {
       id: uuidv4(),
       email: data.user.email,
       type: selectedOption,
-      is_read_admin: '',
-      is_read: userInfo?.role == 'admin' ? false : true,
+      is_read_admin: userInfo?.role == "admin" ? true : false,
+      is_read: userInfo?.role == "admin" ? true : false,
       is_paid_leave: selectedOptionRadio,
       reason: textValue,
-      date: (!endDate || startDateFormat === endDateFormat)
-        ? `${startDateFormat}` : `${startDateFormat} - ${endDateFormat}`
+      date:
+        !endDate || startDateFormat === endDateFormat
+          ? `${startDateFormat}`
+          : `${startDateFormat} - ${endDateFormat}`,
+      status:
+        userInfo?.role === "admin"
+          ? REQUEST_STATUS.APPROVE
+          : REQUEST_STATUS.PENDING,
     };
 
-    // Check the conditions for adding a date 
-    const mappedValues = items.map((item) => item.date);
-    const startStr = moment(startDateFormat, 'DD/MM/YYYY');
-    const endStr = moment(endDateFormat, 'DD/MM/YYYY');
-    for (const d of mappedValues) {
-      const [s, e] = d.split(' - ');
-      const sStr = moment(s, 'DD/MM/YYYY');
-      const eStr = moment(e, 'DD/MM/YYYY');
-      if (startStr.isSameOrAfter(sStr) && endStr.isSameOrBefore(eStr)) {
-        setErrMessageDate(true)
-        return;
-      }
-      if ((startDateFormat >= sStr.format('DD/MM/YYYY')) && (eStr.format('DD/MM/YYYY') !== 'Invalid date' && startDateFormat <= eStr.format('DD/MM/YYYY'))) {
-        setErrMessageDate(true)
-        return;
-      }
-      if (endDateFormat >= sStr.format('DD/MM/YYYY') && endDateFormat <= eStr.format('DD/MM/YYYY')) {
-        setErrMessageDate(true)
-        return;
-      }
+    const overlapsWithExisting = items.some((item) => {
+      const [existingStartDate, existingEndDate] = item.date.split(' - ');
+      const newStartDate = new Date(startDateFormat);
+      const newEndDate = endDate ? new Date(endDateFormat) : newStartDate;
+
+      const existingStart = new Date(existingStartDate);
+      const existingEnd = existingEndDate ? new Date(existingEndDate) : existingStart;
+
+      return (
+        (newStartDate >= existingStart && newStartDate <= existingEnd) ||
+        (newEndDate >= existingStart && newEndDate <= existingEnd) ||
+        (existingStart >= newStartDate && existingStart <= newEndDate) ||
+        (existingEnd >= newStartDate && existingEnd <= newEndDate)
+      );
+    });
+
+    if (overlapsWithExisting) {
+      setErrMessageDate(true);
+      return;
     }
 
     const convertDateSelect = [
@@ -111,46 +118,121 @@ const ModalDayOff = ({ isOpen, closeModal, dataList }) => {
     const checkDateExists = arraySplitDayModal.some(obj1 => arraySplitDayList.some(obj2 => obj1.date === obj2.date && obj1.type === obj2.type))
 
     if (checkDateExists) {
-      setErrMessageDate(true)
+      setErrMessageDate(true);
     } else {
       setItems([...items, newItem]);
-      setTextValue('');
-      setSelectedOption('2')
-      setStartDate(null)
-      setEndDate(null)
+      setTextValue("");
+      setSelectedOption("2");
+      setStartDate(null);
+      setEndDate(null);
     }
   };
 
   const addRequestPostToSheet = () => {
     setLoading(true);
-    const callbacks = {
-      onSuccess: (newToken) => {
-        wirteRequest(items, newToken ? newToken : data.accessToken, userInfo)
-          .then((res) => {
-            toast.success("Update successful", {
-              position: toast.POSITION.TOP_CENTER,
-              autoClose: 3000,
+    if (userInfo.role === "admin") {
+      const data2 = [
+        ...items.map((item) => [
+          item.id,
+          item.email,
+          item.date,
+          item.type,
+          item.reason,
+          item.status,
+          item.is_read_admin ? "TRUE" : "",
+          item.is_read ? "TRUE" : "FALSE",
+          item.is_paid_leave ? "TRUE" : "FALSE",
+          "", // comment
+        ]),
+      ];
+      const dataRequest = [...dataListInitial].concat(data2);
+      const listApprove = dataList.filter(
+        (item) => item.status.trim().toUpperCase() == "APPROVE"
+      );
+      const ranges = getRangeRequests(
+        items,
+        userInfo.email,
+        listApprove,
+        listUserInfo
+      );
+
+      const rangeDayOffs = [];
+      ranges.forEach((range) => {
+        rangeDayOffs.push({ range: range, values: [["O"]] });
+      });
+
+      const dataRange = [
+        {
+          range: SHEET_REQUEST_OFF,
+          values: dataRequest,
+        },
+        ...rangeDayOffs,
+      ];
+      const callbacks = {
+        onSuccess: (newToken) => {
+          writeDataToMultipleSheets(
+            newToken ? newToken : data.accessToken,
+            dataRange
+          )
+            .then((response) => {
+              toast.success("Update successful", {
+                position: toast.POSITION.TOP_CENTER,
+                autoClose: 3000,
+              });
+              closeModal();
+              setLoading(false);
+            })
+            .catch((error) => {
+              console.error("Đã xảy ra lỗi:", error);
+              setLoading(false);
             });
-            closeModal();
-            setLoading(false);
-          })
-          .catch((error) => {
-            console.error("Đã xảy ra lỗi:", error);
-            setLoading(false);
-          });
-      },
-      onFail: () => {
-        setLoading(false);
-        closeModal();
-        signOut();
-      }
+        },
+        onFail: () => {
+          setLoading(false);
+          closeModal();
+          signOut();
+        },
+      };
+
+      console.log(dataRange);
+      updateData(callbacks, data, update);
+    } else {
+      const callbacks = {
+        onSuccess: (newToken) => {
+          wirteRequest(items, newToken ? newToken : data.accessToken)
+            .then((res) => {
+              // const response = await writeDataToMultipleSheets();
+              toast.success("Update successful", {
+                position: toast.POSITION.TOP_CENTER,
+                autoClose: 3000,
+              });
+              closeModal();
+              setLoading(false);
+            })
+            .catch((error) => {
+              console.error("Đã xảy ra lỗi:", error);
+              setLoading(false);
+            });
+        },
+        onFail: () => {
+          setLoading(false);
+          closeModal();
+          signOut();
+        },
+      };
+      updateData(callbacks, data, update);
     }
-    updateData(callbacks, data, update)
   };
 
   const isWeekend = (date) => {
     const dayOfWeek = date.getDay();
-    return dayOfWeek === 1 || dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4 || dayOfWeek === 5; // 0 is Sunday, 6 is Saturday
+    return (
+      dayOfWeek === 1 ||
+      dayOfWeek === 2 ||
+      dayOfWeek === 3 ||
+      dayOfWeek === 4 ||
+      dayOfWeek === 5
+    ); // 0 is Sunday, 6 is Saturday
   };
 
   const targetIndices = [0, 1];

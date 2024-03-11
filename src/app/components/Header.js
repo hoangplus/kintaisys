@@ -39,7 +39,7 @@ const Header = () => {
     for (const row of originalLst) {
       const requestDetail = dataList.find(request => request.id === row[0]);
       if(requestDetail?.id) {
-        row[7] = false;
+        row[7] = true;
       }
     }
 
@@ -75,7 +75,7 @@ const Header = () => {
     for (const row of originalLst) {
       const requestDetail = dataList.find(request => request.id === row[0]);
       if(requestDetail?.id) {
-        row[7] = false;
+        row[7] = true;
       }
     }
 
@@ -112,7 +112,7 @@ const Header = () => {
     for (const row of originalLst) {
       const requestDetail = dataListMember.find(request => request.id === row[0]);
       if(requestDetail?.id) {
-        row[6] = false;
+        row[6] = true;
       }
     }
 
@@ -148,7 +148,7 @@ const Header = () => {
     for (const row of originalLst) {
       const requestDetail = dataListMember.find(request => request.id === row[0]);
       if(requestDetail?.id) {
-        row[6] = false;
+        row[6] = true;
       }
     }
 
@@ -239,7 +239,7 @@ const Header = () => {
         const jsonData = tableToJson(result?.data?.values);
         setDataListInitial(result?.data?.values)
         const listRequest = jsonData.filter(
-          (item) => item.is_read
+          (item) => !item.is_read
         );
         for (const item of listRequest) {
           const userFind = listUserInfo?.find(user => user.email === item.email) || { name: '' };
@@ -249,7 +249,7 @@ const Header = () => {
 
         //for member
         const listRequestMember = jsonData.filter(
-          (item) => item.is_read_admin && item.email === data?.user.email
+          (item) => !item.is_read_admin && item.email === data?.user.email
         );
         for (const item of listRequestMember) {
           const userFind = listUserInfo?.find(user => user.email === item.email) || { name: '' };

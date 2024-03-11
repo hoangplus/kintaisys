@@ -9,6 +9,7 @@ import {
 } from "../constants";
 import { jwtDecode } from "jwt-decode";
 import moment from "moment";
+import { convertArrayList, convertArraySplitDayList } from "./convertArray";
 
 export const readData = async (sheetName) => {
   return axios.get(
@@ -84,7 +85,7 @@ export const getColumnLetter = (index) => {
   return columnLetter;
 };
 
-export const wirteRequest = (requests, accessToken, userInfo) => {
+export const wirteRequest = (requests, accessToken) => {
   const range = SHEET_REQUEST_OFF; // specify the sheet name
   const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}:append?key=${API_KEY}`;
   const rowsToAdd = requests.map((item) => ({
@@ -94,7 +95,7 @@ export const wirteRequest = (requests, accessToken, userInfo) => {
       item.date,
       item.type.toString(),
       item.reason,
-      userInfo?.role === 'admin' ? REQUEST_STATUS.APPROVE : REQUEST_STATUS.PENDING,
+      item.status,
       item.is_read_admin,
       item.is_read,
       item.is_paid_leave
@@ -198,6 +199,67 @@ export const getCellNameTotalTime = (email, dateTime, listUser) => {
   const columnName = getColumnLetter(diffDays + 2);
   const rowIndex = startIndex + userIndex;
   const position = `${columnName}${rowIndex}`;
-  const range = `${month}:${position}`;
+  const range = `${month}!${position}`;
   return range;
+};
+
+export const groupRequestByEmail = (requests) => {
+  const groupedData = {};
+  requests.forEach((item) => {
+    if (!groupedData[item.email]) {
+      groupedData[item.email] = [item];
+    } else {
+      groupedData[item.email].push(item);
+    }
+  });
+
+  return Object.values(groupedData);
+};
+
+export const getRangeRequests = (requests, email, listApprove, listUserInfo) => {
+  const arrayList = convertArrayList(requests);
+  const arraySplitDayList = convertArraySplitDayList(arrayList);
+  const arrayRequestConverted = arraySplitDayList.filter((item) => {
+    const date = moment(item.date, "DD/MM/YYYY");
+    return date.day() !== 0 && date.day() !== 6;
+  });
+
+  const listApproveWithEmail = listApprove.filter(
+    (item) => item.email == email && item.type != 2
+  );
+  const arrayListApprove = convertArrayList(listApproveWithEmail);
+  const arraySplitApproveList = convertArraySplitDayList(arrayListApprove);
+  const listApproveNoWeekDay = arraySplitApproveList.filter((item) => {
+    const date = moment(item.date, "DD/MM/YYYY");
+    return date.day() !== 0 && date.day() !== 6;
+  });
+ 
+
+  const listSome = listApproveNoWeekDay.filter((item) =>
+    arrayRequestConverted.some((item2) => item2.date === item.date)
+  );
+  const listAll = arrayRequestConverted.concat(listSome);
+  const duplicateDates = findDuplicateDates(listAll);
+  const ranges = [];
+  duplicateDates.forEach((date) => {
+    let range = getCellNameTotalTime(email, date, listUserInfo);
+    if (range) ranges.push(range);
+  });
+  return ranges;
+};
+
+export const findDuplicateDates = (listRequest) => {
+  const seenDates = {};
+  const duplicateDates = [];
+  listRequest.forEach((item) => {
+    if (seenDates[item.date]) {
+      if (!duplicateDates.includes(item.date)) {
+        duplicateDates.push(item.date);
+      }
+    } else {
+      seenDates[item.date] = true;
+    }
+  });
+
+  return duplicateDates;
 };
