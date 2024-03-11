@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "license": "MIT",
   "dependencies": {
     "@reduxjs/toolkit": "^2.0.1",
     "axios": "^1.6.2",
