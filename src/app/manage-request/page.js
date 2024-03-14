@@ -27,6 +27,7 @@ import {
   SHEET_REQUEST_OFF,
   REQUEST_STATUS,
   SHEET_MEMBER,
+  SHEET_NOTIFICATIONS
 } from "@/constants";
 import { v4 as uuidv4 } from "uuid";
 import { setListUserInfo } from "../GlobalRedux/reducers/listuser.reducer";
@@ -35,6 +36,7 @@ import { setUserInfo } from "../GlobalRedux/reducers/user.reducer";
 
 const ManageRequest = () => {
   const [dataList, setDataList] = useState([]);
+  const [dataNotifyInitial, setDataNotifyInitial] = useState([]);
   const [dataListInitial, setDataListInitial] = useState([]);
   const [dataMemberInitial, setDataMemberInitial] = useState([]);
   const { data, update } = useSession();
@@ -58,15 +60,31 @@ const ManageRequest = () => {
     for (const row of originalLst) {
       if (row[0] === item.id) {
         row[5] = REQUEST_STATUS.REJECT;
-        row[6] = false;
-        row[9] = item.comment;
+        row[7] = item.comment;
         break;
       }
     }
+
+    const originalNotifyLst = [
+      uuidv4(),
+      'admin',
+      item.email,
+      false,
+      `${userInfo.name} has rejected ${
+        item?.is_paid_leave ? `paid leave` : `unpaid leave`} dayoff request on ${
+          item?.type == 2 ? `all day` : item?.type == 0 ? `morning` : `afternoon`} ${item?.date}`
+    ];
+
+    dataNotifyInitial.push(originalNotifyLst);
+
     const dataRange = [
       {
         range: SHEET_REQUEST_OFF,
         values: originalLst,
+      },
+      {
+        range: SHEET_NOTIFICATIONS,
+        values: dataNotifyInitial,
       },
     ];
 
@@ -100,11 +118,21 @@ const ManageRequest = () => {
     for (const row of originalLst) {
       if (row[0] === item.id) {
         row[5] = REQUEST_STATUS.APPROVE;
-        row[6] = false;
-        row[9] = item.comment;
+        row[7] = item.comment;
         break;
       }
     }
+
+    const originalNotifyLst = [
+      uuidv4(),
+      'admin',
+      item.email,
+      false,
+      `${userInfo.name} has approved ${
+        item?.is_paid_leave ? `paid leave` : `unpaid leave`} dayoff request on ${
+          item?.type == 2 ? `all day` : item?.type == 0 ? `morning` : `afternoon`} ${item?.date}`
+    ];
+    dataNotifyInitial.push(originalNotifyLst);
 
     const ranges = getRangeRequests([item], item.email, listApprove, listUserInfo);
 
@@ -167,6 +195,10 @@ const ManageRequest = () => {
         range: SHEET_MEMBER,
         values: memberList,
       },
+      {
+        range: SHEET_NOTIFICATIONS,
+        values: dataNotifyInitial,
+      },
       ...rangeDayOffs,
     ];
 
@@ -199,7 +231,6 @@ const ManageRequest = () => {
         signOut();
       },
     };
-    console.log(dataRange);
     updateData(callbacks, data, update)
   };
 
@@ -210,14 +241,34 @@ const ManageRequest = () => {
       const requestDetail = dataList.find((request) => request.id === row[0]);
       if (requestDetail?.isChecked) {
         row[5] = REQUEST_STATUS.REJECT;
-        row[6] = false;
-        row[9] = requestDetail.comment;
+        row[7] = requestDetail.comment;
       }
     }
+
+    const data1 = [
+      ...dataList.map((requestDetail) => [
+        uuidv4(),
+        'admin',
+        requestDetail.email,
+        false,
+        `${userInfo.name} has rejected ${
+          requestDetail?.is_paid_leave ? `paid leave` : `unpaid leave`} dayoff request on ${
+            requestDetail?.type == 2 ? `all day` : requestDetail?.type == 0 ? `morning` : `afternoon`} ${requestDetail?.date}`
+      ]),
+    ];
+
+    data1.forEach(subArray => {
+      dataNotifyInitial.push(subArray);
+    });
+
     const dataRange = [
       {
         range: SHEET_REQUEST_OFF,
         values: originalLst,
+      },
+      {
+        range: SHEET_NOTIFICATIONS,
+        values: dataNotifyInitial,
       },
     ];
 
@@ -255,14 +306,29 @@ const ManageRequest = () => {
         listChecked.push(requestDetail);
 
         row[5] = REQUEST_STATUS.APPROVE;
-        row[6] = false;
-        row[9] = requestDetail.comment;
+        row[7] = requestDetail.comment;
       }
     }
     const listDataGroup = groupRequestByEmail(listChecked);
     const ranges = [];
     listDataGroup.forEach((item) => {
       ranges.push(...getRangeRequests(item, item[0].email, listApprove, listUserInfo));
+    });
+
+    const data1 = [
+      ...dataList.map((requestDetail) => [
+        uuidv4(),
+        'admin',
+        requestDetail.email,
+        false,
+        `${userInfo.name} has approved ${
+          requestDetail?.is_paid_leave ? `paid leave` : `unpaid leave`} dayoff request on ${
+            requestDetail?.type == 2 ? `all day` : requestDetail?.type == 0 ? `morning` : `afternoon`} ${requestDetail?.date}`
+      ]),
+    ];
+
+    data1.forEach(subArray => {
+      dataNotifyInitial.push(subArray);
     });
 
     const rangeDayOffs = [];
@@ -319,6 +385,10 @@ const ManageRequest = () => {
       {
         range: SHEET_MEMBER,
         values: memberList,
+      },
+      {
+        range: SHEET_NOTIFICATIONS,
+        values: dataNotifyInitial,
       },
       ...rangeDayOffs,
     ];
@@ -412,6 +482,14 @@ const ManageRequest = () => {
       .catch((error) => {
         console.error("Đã xảy ra lỗi:", error);
         setLoading(false);
+      });
+
+    readData(SHEET_NOTIFICATIONS)
+      .then((result) => {
+        const jsonData = tableToJson(result?.data?.values);
+        setDataNotifyInitial(result?.data?.values);
+      })
+      .catch((error) => {
       });
   };
 

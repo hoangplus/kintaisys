@@ -11,7 +11,7 @@ import {
 import moment from "moment";
 import Loading from "../loading";
 import { useSelector, useDispatch } from "react-redux";
-import { REQUEST_STATUS, SHEET_REQUEST_OFF } from "@/constants";
+import { REQUEST_STATUS, SHEET_REQUEST_OFF, SHEET_NOTIFICATIONS } from "@/constants";
 import { v4 as uuidv4 } from "uuid";
 import ModalDayOff from "./ModalDayOff";
 import { jwtDecode } from "jwt-decode";
@@ -23,6 +23,7 @@ const RequestOff = () => {
   const { data, update } = useSession();
   const [loading, setLoading] = useState(false);
   const [dataListInitial, setDataListInitial] = useState([]);
+  const [dataNotifyInitial, setDataNotifyInitial] = useState([]);
   const userInfo = useSelector((state) => state.user.userInfo);
 
   const handleRequestDayOff = () => {
@@ -48,6 +49,15 @@ const RequestOff = () => {
       .catch((error) => {
         console.error("Đã xảy ra lỗi:", error);
         setLoading(false);
+      });
+
+    readData(SHEET_NOTIFICATIONS)
+      .then((result) => {
+        setDataNotifyInitial(result?.data?.values);
+      })
+      .catch((error) => {
+        console.error("Đã xảy ra lỗi:", error);
+
       });
   };
 
@@ -232,6 +242,7 @@ const RequestOff = () => {
         isOpen={isOpenModal}
         closeModal={closeModal}
         dataListInitial={dataListInitial}
+        dataNotifyInitial={dataNotifyInitial}
       />
       {loading && <Loading />}
     </div>

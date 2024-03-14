@@ -71,31 +71,6 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (data && !userInfo) {
-      readData('members')
-        .then((result) => {
-          const jsonData = tableToJson(result?.data?.values);
-
-          dispatch(setListUserInfo(jsonData));
-          const verifyEmail = jsonData.filter((member) => {
-            if (member.email === data?.user.email) {
-              dispatch(setUserInfo(member));
-              return true;
-            }
-          });
-
-          if (verifyEmail.length === 0) {
-            alert('Wrong email');
-            signOut();
-          }
-        })
-        .catch((error) => {
-          console.error('Đã xảy ra lỗi:', error);
-        });
-    }
-  }, [data]);
-
-  useEffect(() => {
     if (userInfo) {
       getData(selectMonth);
     }

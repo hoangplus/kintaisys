@@ -11,7 +11,8 @@ import NotificationPopover from './NotificationPopover';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   SHEET_REQUEST_OFF,
-  SHEET_MEMBER
+  SHEET_MEMBER,
+  SHEET_NOTIFICATIONS
 } from "@/constants";
 import { useSelector } from "react-redux";
 
@@ -23,6 +24,8 @@ const Header = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [dataList, setDataList] = useState([]);
   const [dataListMember, setDataListMember] = useState([]);
+  const [dataNotifyList, setDataNotifyList] = useState([]);
+  const [dataNotifyListMember, setDataNotifyListMember] = useState([]);
   const listUserInfo = useSelector((state) => state.listUser.listUserInfo);
   const userInformation = useSelector((state) => state.user.userInfo);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -39,13 +42,13 @@ const Header = () => {
     for (const row of originalLst) {
       const requestDetail = dataList.find(request => request.id === row[0]);
       if(requestDetail?.id) {
-        row[7] = true;
+        row[3] = true;
       }
     }
 
     const dataRange = [
       {
-        range: SHEET_REQUEST_OFF,
+        range: SHEET_NOTIFICATIONS,
         values: originalLst,
       },
     ];
@@ -54,11 +57,11 @@ const Header = () => {
       onSuccess: (newToken) => {
         writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
           .then((response) => {
-            console.log("Approve request success");
-            getData();
+            console.log("write notification success");
           })
           .catch((error) => {
-            console.log("Approve request fail");
+            console.log("write notification fail");
+            console.log(error);
           });
       },
       onFail: () => {
@@ -75,13 +78,13 @@ const Header = () => {
     for (const row of originalLst) {
       const requestDetail = dataList.find(request => request.id === row[0]);
       if(requestDetail?.id) {
-        row[7] = true;
+        row[3] = true;
       }
     }
 
     const dataRange = [
       {
-        range: SHEET_REQUEST_OFF,
+        range: SHEET_NOTIFICATIONS,
         values: originalLst,
       },
     ];
@@ -91,7 +94,6 @@ const Header = () => {
         writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
           .then((response) => {
             console.log("Approve request success");
-            getData();
           })
           .catch((error) => {
             console.log("Approve request fail");
@@ -112,13 +114,13 @@ const Header = () => {
     for (const row of originalLst) {
       const requestDetail = dataListMember.find(request => request.id === row[0]);
       if(requestDetail?.id) {
-        row[6] = true;
+        row[3] = true;
       }
     }
 
     const dataRange = [
       {
-        range: SHEET_REQUEST_OFF,
+        range: SHEET_NOTIFICATIONS,
         values: originalLst,
       },
     ];
@@ -128,12 +130,11 @@ const Header = () => {
         writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
           .then((response) => {
             console.log("Approve request success");
-            getData();
           })
           .catch((error) => {
             console.log("Approve request fail");
           });
-      },
+      }, 
       onFail: () => {
         signOut();
       }
@@ -148,13 +149,13 @@ const Header = () => {
     for (const row of originalLst) {
       const requestDetail = dataListMember.find(request => request.id === row[0]);
       if(requestDetail?.id) {
-        row[6] = true;
+        row[3] = true;
       }
     }
 
     const dataRange = [
       {
-        range: SHEET_REQUEST_OFF,
+        range: SHEET_NOTIFICATIONS,
         values: originalLst,
       },
     ];
@@ -164,7 +165,6 @@ const Header = () => {
         writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
           .then((response) => {
             console.log("Approve request success");
-            getData();
           })
           .catch((error) => {
             console.log("Approve request fail");
@@ -178,30 +178,30 @@ const Header = () => {
   }
 
   const popoverContent =
-  <div className={`wrap-notify ${dataList?.length == 0 && `h-80`}`}>
+  <div className={`wrap-notify`}>
     <div className="wrap-header-notify">
       <p>Notifications</p>
       <p onClick={() => clickCloseNotify()} className="cursor-pointer">x</p>
     </div>
-    {dataList?.map((item, index) => (
-      <div key={item.id} className="wrap-notify-box px-4">
-        <div className="notify-box flex p-3 leading-7" onClick={() => clickNotify()}>
-          <p className="text-orange-color">{item?.name}<span className="text-primary-color"> has created dayoff request on {item?.date}</span></p>
+    {dataNotifyList.slice().reverse()?.map((item, index) => (
+      <div key={item.id} className={`${item?.is_read ? `wrap-notify-box` : `wrap-notify-nonread`} px-4`}>
+        <div className="notify-box flex p-4 leading-7" onClick={() => clickNotify()}>
+          <p className="text-primary-color">{item?.message}</p>
         </div>
       </div>
     ))}
   </div>;
 
   const popoverContentMember =
-  <div className={`wrap-notify ${dataListMember?.length == 0 && `h-80`}`}>
+  <div className={`wrap-notify`}>
     <div className="wrap-header-notify">
       <p>Notifications</p>
       <p onClick={() => clickCloseNotifyMember()} className="cursor-pointer">x</p>
     </div>
-    {dataListMember?.map((item, index) => (
-      <div key={item.id} className="px-4">
-        <div className="notify-box p-3 leading-7" onClick={() => clickNotifyMember()}>
-          <p className="">Your dayoff request on {item?.date} has been {item?.status == 'reject' ? 'rejected' : 'approved'} </p>
+    {dataNotifyListMember.slice().reverse()?.map((item, index) => (
+      <div key={item.id} className={`${item?.is_read ? `wrap-notify-box` : `wrap-notify-nonread`} px-4`}>
+        <div className="notify-box p-4 leading-7" onClick={() => clickNotifyMember()}>
+          <p className="">{item?.message} </p>
         </div>
       </div>
     ))}
@@ -234,28 +234,36 @@ const Header = () => {
 
   useEffect(() => {
     if (userInformation) {
-      readData(SHEET_REQUEST_OFF)
+      readData(SHEET_NOTIFICATIONS)
       .then((result) => {
         const jsonData = tableToJson(result?.data?.values);
         setDataListInitial(result?.data?.values)
         const listRequest = jsonData.filter(
-          (item) => !item.is_read
+          (item) => !item.is_read && item.to == 'admin'
+        );
+        const listNotify = jsonData.filter(
+          (item) => item.to == 'admin'
         );
         for (const item of listRequest) {
-          const userFind = listUserInfo?.find(user => user.email === item.email) || { name: '' };
+          const userFind = listUserInfo?.find(user => user.email === item.from) || { name: '' };
           item.name = userFind.name;
         }
         setDataList(listRequest);
+        setDataNotifyList(listNotify);
 
         //for member
         const listRequestMember = jsonData.filter(
-          (item) => !item.is_read_admin && item.email === data?.user.email
+          (item) => !item.is_read && item.to == data?.user.email
+        );
+        const listNotifyMember = jsonData.filter(
+          (item) => item.to === data?.user.email
         );
         for (const item of listRequestMember) {
-          const userFind = listUserInfo?.find(user => user.email === item.email) || { name: '' };
+          const userFind = listUserInfo?.find(user => user.email === item.from) || { name: '' };
           item.name = userFind.name;
         }
         setDataListMember(listRequestMember);
+        setDataNotifyListMember(listNotifyMember);
       })
       .catch((error) => {
         console.error("Đã xảy ra lỗi:", error);

@@ -10,6 +10,7 @@ export const API_KEY = process.env.API_KEY
 
 export const SHEET_REQUEST_OFF = "request_off";
 export const SHEET_MEMBER = "members";
+export const SHEET_NOTIFICATIONS = "notifications";
 
 export const REQUEST_STATUS = {
     PENDING: 'pending',

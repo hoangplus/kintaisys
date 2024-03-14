@@ -133,7 +133,7 @@ button {
   display: flex;
   background-color: #F1F2E8;
   width: 100%;
-  height: 150px;
+  height: 160px;
   overflow-x: auto;
 }
 .close-box {
@@ -213,7 +213,7 @@ td {
 }
 
 .table-container-manager {
-  height: 750px;
+  height: 700px;
   overflow-y: auto;
 }
 
@@ -288,16 +288,22 @@ table {
   position: absolute;
   top: 70px;
   right: 10px;
-  background-color: #F1F2E8;
+  background-color: #fff;
   width: 400px;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+  max-height: 500px;
+  overflow: auto;
+}
+
+.wrap-notify-nonread {
+  background-color: #F1F2E8;
+  border-bottom: 1px solid #d4c7c7;
 }
 
 .wrap-header-notify {
   background-color: #22355E;
   color: #fff;
   justify-content: space-between;
-  margin-bottom: 10px;
   display: flex;
   padding: 10px 12px;
   border-radius: 3px;
@@ -330,12 +336,12 @@ table {
 
 .notify-box {
   cursor: pointer;
-  margin-bottom: 10px;
 }
 
 .wrap-canvas {
-  height: 700px;
-  width: 1401px;
+  height: 600px;
+  width: 1200px;
+  margin-top: 30px;
 }
 
 .canvas {
@@ -345,5 +351,20 @@ table {
 }
 
 .w-27rem {
-  width: 27rem;
+  width: 27rem !important;
+}
+
+.loader {
+  width: 100px;
+  height: 100px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: 
+    radial-gradient(farthest-side,#ffa516 94%,#0000) top/8px 8px no-repeat,
+    conic-gradient(#0000 30%,#ffa516);
+  -webkit-mask: radial-gradient(farthest-side,#0000 calc(100% - 8px),#000 0);
+  animation: l13 1s infinite linear;
+}
+@keyframes l13{ 
+  100%{transform: rotate(1turn)}
 }
