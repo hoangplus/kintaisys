@@ -19,12 +19,12 @@ const monthNames = [
 const ChartDayoff = () => {
   const chartRef = useRef(null);
   const { data, update } = useSession();
-  const [userInfo, setUserInfo] = useState(null);
   const [dataList, setDataList] = useState([]);
   const listUserInfo = useSelector((state) => state.listUser.listUserInfo);
   const [selectedMonth, setSelectedMonth] = useState('');
-  const [resultMonth, setResultMonth] = useState({});
+  const [resultMonth, setResultMonth] = useState(null);
   const [loading, setLoading] = useState(false);
+  const userInfo = useSelector((state) => state.user.userInfo);
 
   const handleSelectedMonth = (e) => {
     setSelectedMonth(e.target.value);
@@ -32,17 +32,6 @@ const ChartDayoff = () => {
 
   useEffect(() => {
     setLoading(true);
-    readData(SHEET_MEMBER)
-      .then((result) => {
-        const jsonData = tableToJson(result?.data?.values);
-        setUserInfo(jsonData);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Đã xảy ra lỗi:", error);
-        setLoading(false);
-      });
-
     readData(SHEET_REQUEST_OFF)
       .then((result) => {
         setLoading(false);
@@ -97,7 +86,11 @@ const ChartDayoff = () => {
 
   useEffect(() => {
     if (dataList.length > 0) {
-      setResultMonth(getListDataChartWithMonth(selectedMonth))
+      let dataChart = getListDataChartWithMonth(selectedMonth);
+      let abc = JSON.stringify(null)
+      if(JSON.stringify(dataChart) !== JSON.stringify(resultMonth)) {
+        setResultMonth(dataChart)
+      }
     }
   }, [dataList, selectedMonth]);
 
@@ -132,16 +125,14 @@ const ChartDayoff = () => {
 
   useEffect(() => {
     let myChart = null;
-
-    if (chartRef.current) {
+    if (chartRef.current && resultMonth) {
       const ctx = chartRef.current.getContext("2d");
-
       // Destroy the existing chart before creating a new one
       if (myChart) {
         myChart.destroy();
       }
 
-      myChart = DaysOffChart(ctx, userInfo, resultMonth);
+      myChart = DaysOffChart(ctx, listUserInfo, resultMonth);
     }
 
     // Cleanup function to destroy the chart when the component unmounts

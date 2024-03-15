@@ -30,9 +30,7 @@ import {
   SHEET_NOTIFICATIONS
 } from "@/constants";
 import { v4 as uuidv4 } from "uuid";
-import { setListUserInfo } from "../GlobalRedux/reducers/listuser.reducer";
 import { setListRequest } from "../GlobalRedux/reducers/listRequest.reducer";
-import { setUserInfo } from "../GlobalRedux/reducers/user.reducer";
 
 const ManageRequest = () => {
   const [dataList, setDataList] = useState([]);
@@ -492,32 +490,6 @@ const ManageRequest = () => {
       .catch((error) => {
       });
   };
-
-  useEffect(() => {
-    if ((data && !userInfo) || data) {
-      readData(SHEET_MEMBER)
-        .then((result) => {
-          const jsonData = tableToJson(result?.data?.values);
-
-          setDataMemberInitial(result?.data?.values);
-          dispatch(setListUserInfo(jsonData));
-          const verifyEmail = jsonData.filter((member) => {
-            if (member.email === data?.user.email) {
-              dispatch(setUserInfo(member));
-              return true;
-            }
-          });
-
-          if (verifyEmail.length === 0) {
-            alert("Wrong email");
-            signOut();
-          }
-        })
-        .catch((error) => {
-          console.error("Đã xảy ra lỗi:", error);
-        });
-    }
-  }, [data]);
 
   useEffect(() => {
     if (userInfo) {

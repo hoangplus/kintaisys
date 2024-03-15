@@ -8,7 +8,6 @@ import Loading from "../loading";
 import { useSelector, useDispatch } from "react-redux";
 import { REQUEST_STATUS, SHEET_REQUEST_OFF, STATUS_PENDING } from "@/constants";
 import { v4 as uuidv4 } from "uuid";
-import { setListUserInfo } from "../GlobalRedux/reducers/listuser.reducer";
 
 const HistoryCheckin = () => {
   const currentDate = new Date();

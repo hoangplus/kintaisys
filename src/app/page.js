@@ -17,8 +17,6 @@ import {
 
 import { jwtDecode } from 'jwt-decode';
 import { useSelector, useDispatch } from 'react-redux';
-import { setUserInfo } from './GlobalRedux/reducers/user.reducer';
-import { setListUserInfo } from './GlobalRedux/reducers/listuser.reducer';
 
 const Home = () => {
   const currentDate = new Date();

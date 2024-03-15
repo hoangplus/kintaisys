@@ -64,19 +64,6 @@ const HistoryOff = () => {
     }
   }, [userInfo]);
 
-  useEffect(() => {
-    if ((data && !userInfo) || data) {
-      readData(SHEET_MEMBER)
-        .then((result) => {
-          const jsonDataMember = tableToJson(result?.data?.values);
-          dispatch(setListUserInfo(jsonDataMember));
-        })
-        .catch((error) => {
-          console.error('Đã xảy ra lỗi:', error);
-        });
-    }
-  }, [data]);
-
   return (
     <div>
       {loading ? <Loading /> : <div className="my-16 max-md:my-10">

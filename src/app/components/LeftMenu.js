@@ -7,6 +7,7 @@ import { SHEET_MEMBER, SHEET_REQUEST_OFF } from "@/constants";
 import { useSelector, useDispatch } from "react-redux";
 import { setListRequest } from "../GlobalRedux/reducers/listRequest.reducer";
 import { setUserInfo } from "../GlobalRedux/reducers/user.reducer";
+import { setListUserInfo } from "../GlobalRedux/reducers/listuser.reducer";
 const LeftMenu = () => {
   const { data, update } = useSession();
   const router = useRouter();
@@ -23,9 +24,9 @@ const LeftMenu = () => {
       readData(SHEET_MEMBER)
         .then((result) => {
           const jsonData = tableToJson(result?.data?.values);
+          dispatch(setListUserInfo(jsonData));
           const verifyEmail = jsonData.filter((member) => {
             if (member.email === data?.user.email) {
-              setUserInfo(member);
               dispatch(setUserInfo(member));
               return true;
             }
@@ -39,28 +40,29 @@ const LeftMenu = () => {
         .catch((error) => {
           console.error("Đã xảy ra lỗi:", error);
         });
-
-      readData(SHEET_REQUEST_OFF)
-        .then((result) => {
-          const jsonData = tableToJson(result?.data?.values);
-          const listRequest = jsonData.filter(
-            (item) => item.status.trim().toUpperCase() == "PENDING"
-          );
-          for (const item of listRequest) {
-            const userFind = listUserInfo?.find(
-              (user) => user.email === item.email
-            ) || { name: "" };
-            item.name = userFind.name;
-          }
-          dispatch(setListRequest(listRequest));
-        })
-        .catch((error) => {
-        });
     }
   }, [data]);
 
+  useEffect(() => {
+    readData(SHEET_REQUEST_OFF)
+      .then((result) => {
+        const jsonData = tableToJson(result?.data?.values);
+        const listRequest = jsonData.filter(
+          (item) => item.status.trim().toUpperCase() == "PENDING"
+        );
+        for (const item of listRequest) {
+          const userFind = listUserInfo?.find(
+            (user) => user.email === item.email
+          ) || { name: "" };
+          item.name = userFind.name;
+        }
+        dispatch(setListRequest(listRequest));
+      })
+      .catch((error) => {});
+  }, [listUserInfo]);
+
   return (
-    <div className="w-27rem px-6 py-10 h-screen bg-primary-color text-white max-md:h-full max-md:py-8">
+    <div className="w-25rem px-6 py-10 h-screen bg-primary-color text-white max-md:h-full max-md:py-8">
       <div className="flex items-center cursor-pointer">
         <div className="bg-white rounded-md mr-4 shrink-0 sidebar-avatar">
           <img src={data?.user.image} />
