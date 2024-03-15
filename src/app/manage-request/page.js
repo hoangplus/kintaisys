@@ -52,6 +52,17 @@ const ManageRequest = () => {
     setIsCheckedItem(check);
   }, [dataList]);
 
+  useEffect(() => {
+    readData(SHEET_MEMBER)
+      .then((result) => {
+        setDataMemberInitial(result?.data?.values);
+      })
+      .catch((error) => {
+        console.error("Đã xảy ra lỗi:", error);
+        signOut();
+      });
+  }, []);
+
   const rejectDayOff = (item) => {
     setLoading(true);
     let originalLst = [...dataListInitial];
