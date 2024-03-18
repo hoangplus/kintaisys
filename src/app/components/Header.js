@@ -28,22 +28,20 @@ const Header = () => {
   const userInfo = useSelector((state) => state.user.userInfo);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isPopoverOpenMember, setIsPopoverOpenMember] = useState(false);
-  const [pathPreious, setPathPrevivous] = useState('');
   const dispatch = useDispatch();
   const togglePopover = () => setIsPopoverOpen(!isPopoverOpen);
   const togglePopoverMember = () => setIsPopoverOpenMember(!isPopoverOpenMember);
 
   useEffect(() => {
-   if(data && pathPreious !== pathname) {
-    setPathPrevivous(pathname);
+   if(data) {
     readData(SHEET_MEMBER)
     .then((result) => {
       const jsonData = tableToJson(result?.data?.values);
         jsonData.forEach((member) => {
           if (member.email === data?.user.email) {
+            getNotification(member)
             if(JSON.stringify(member) !== JSON.stringify(userInfo)) {
               dispatch(setUserInfo(member));
-              getNotification(member)
             }
           }
         });
@@ -51,7 +49,6 @@ const Header = () => {
     .catch((error) => {
       console.error("Đã xảy ra lỗi:", error);
     });
-
    }
   }, [pathname, data])
 
