@@ -14,7 +14,8 @@ import {
   SHEET_MEMBER,
   SHEET_NOTIFICATIONS
 } from "@/constants";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setUserInfo } from "../GlobalRedux/reducers/user.reducer";
 
 const Header = () => {
   const pathname = usePathname()
@@ -28,32 +29,31 @@ const Header = () => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isPopoverOpenMember, setIsPopoverOpenMember] = useState(false);
   const [pathPreious, setPathPrevivous] = useState('');
-
+  const dispatch = useDispatch();
   const togglePopover = () => setIsPopoverOpen(!isPopoverOpen);
   const togglePopoverMember = () => setIsPopoverOpenMember(!isPopoverOpenMember);
 
   useEffect(() => {
    if(data && pathPreious !== pathname) {
     setPathPrevivous(pathname);
-     readData(SHEET_MEMBER)
-      .then((result) => {
-        const jsonData = tableToJson(result?.data?.values);
-          jsonData.forEach((member) => {
-            if (member.email === data?.user.email) {
-              if(JSON.stringify(member) !== JSON.stringify(userInfo)) {
-                dispatch(setUserInfo(member));
-              }
+    readData(SHEET_MEMBER)
+    .then((result) => {
+      const jsonData = tableToJson(result?.data?.values);
+        jsonData.forEach((member) => {
+          if (member.email === data?.user.email) {
+            if(JSON.stringify(member) !== JSON.stringify(userInfo)) {
+              dispatch(setUserInfo(member));
+              getNotification(member)
             }
-          });
-      })
-      .catch((error) => {
-        console.error("Đã xảy ra lỗi:", error);
-      });
+          }
+        });
+    })
+    .catch((error) => {
+      console.error("Đã xảy ra lỗi:", error);
+    });
 
-      getNotification()
    }
   }, [pathname, data])
-
 
   const clickNotify = () => {
     router.push('/manage-request')
@@ -80,7 +80,7 @@ const Header = () => {
           writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
             .then((response) => {
               console.log("write notification success");
-              getNotification()
+              getNotification(userInfo)
             })
             .catch((error) => {
               console.log("write notification fail");
@@ -119,7 +119,7 @@ const Header = () => {
           writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
             .then((response) => {
               console.log("write noti success");
-              getNotification()
+              getNotification(userInfo)
             })
             .catch((error) => {
               console.log("write noti fail");
@@ -195,7 +195,7 @@ const Header = () => {
           writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
             .then((response) => {
               console.log("Approve request success");
-              getNotification()
+              getNotification(userInfo)
             })
             .catch((error) => {
               console.log("Approve request fail");
@@ -239,12 +239,12 @@ const Header = () => {
     ))}
   </div>;
 
-  const getNotification = () => {
+  const getNotification = (user) => {
     readData(SHEET_NOTIFICATIONS)
     .then((result) => {
       const jsonData = tableToJson(result?.data?.values);
       setDataListInitial(result?.data?.values)
-      if (userInfo?.role == 'admin') {
+      if (user?.role == 'admin') {
         const numberUnread = jsonData.filter(
           (item) => !item.is_read && item.to == 'admin'
         );
