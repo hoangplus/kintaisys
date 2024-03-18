@@ -10,6 +10,7 @@ import {
   convertArraySplitDayList,
   convertArrayModal,
   convertArraySplitDayModal,
+  countWeekdays,
 } from "@/utils/convertArray";
 import {
   wirteRequest,
@@ -25,6 +26,7 @@ import {
   REQUEST_STATUS,
   SHEET_REQUEST_OFF,
   SHEET_NOTIFICATIONS,
+  SHEET_MEMBER,
 } from "@/constants";
 
 const ModalDayOff = ({
@@ -33,6 +35,7 @@ const ModalDayOff = ({
   dataList,
   dataListInitial,
   dataNotifyInitial,
+  dataMemberInitial,
 }) => {
   if (!isOpen) {
     return null;
@@ -131,6 +134,46 @@ const ModalDayOff = ({
     return false;
   };
 
+  const calcDayOffForAdmin = () => {
+    const memberList = dataMemberInitial.map(row => [...row]);
+    for (const row of memberList) {
+      if (row[2] === userInfo.email) {
+        items.forEach((requestDetail) => {
+          const [startDateString, endDateString] =
+            requestDetail?.date.split("-");
+          const startDate = moment(startDateString, "DD/MM/YYYY");
+          const endDate = moment(endDateString, "DD/MM/YYYY");
+          // Các ngày cần loại bỏ (thứ 7 và chủ nhật)
+          const excludedDays = [0, 6];
+
+          // Tính tổng số ngày sau khi loại bỏ thứ 7 và chủ nhật
+          const totalDays = countWeekdays(startDate, endDate, excludedDays);
+
+          const addOneDay = 1 * (endDateString ? totalDays : 1);
+          const addHalfDay = 0.5 * (endDateString ? totalDays : 1);
+          if (requestDetail.type === "2") {
+            if (!requestDetail.is_paid_leave) {
+              row[4] = `${parseFloat(row[4].replace(",", ".")) + addOneDay}`;
+            } else {
+              row[3] = `${parseFloat(row[3].replace(",", ".")) + addOneDay}`;
+            }
+          } else {
+            if (!requestDetail.is_paid_leave) {
+              row[4] = `${parseFloat(row[4].replace(",", ".")) + addHalfDay}`;
+            } else {
+              row[3] = `${parseFloat(row[3].replace(",", ".")) + addHalfDay}`;
+            }
+          }
+        });
+        break;
+      }
+    }
+    return {
+      range: SHEET_MEMBER,
+      values: memberList,
+    };
+  };
+
   const addRequestPostToSheet = () => {
     setLoading(true);
     const listNewRequest = [
@@ -198,6 +241,9 @@ const ModalDayOff = ({
       },
       ...rangeDayOffs,
     ];
+    if (userInfo?.role == "admin") {
+      dataRange.push(calcDayOffForAdmin());
+    }
     const callbacks = {
       onSuccess: (newToken) => {
         writeDataToMultipleSheets(
@@ -419,7 +465,9 @@ const ModalDayOff = ({
                   <p className="text-ellipsis">{item?.reason}</p>
                 </div>
                 <div className="flex">
-                  <p className="text-ellipsis">{item?.is_paid_leave ? "Paid leave" : 'Unpaid leave'}</p>
+                  <p className="text-ellipsis">
+                    {item?.is_paid_leave ? "Paid leave" : "Unpaid leave"}
+                  </p>
                 </div>
               </div>
             </div>

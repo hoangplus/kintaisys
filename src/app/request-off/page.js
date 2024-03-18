@@ -11,10 +11,11 @@ import {
 import moment from "moment";
 import Loading from "../loading";
 import { useSelector, useDispatch } from "react-redux";
-import { REQUEST_STATUS, SHEET_REQUEST_OFF, SHEET_NOTIFICATIONS } from "@/constants";
+import { REQUEST_STATUS, SHEET_REQUEST_OFF, SHEET_NOTIFICATIONS, SHEET_MEMBER } from "@/constants";
 import { v4 as uuidv4 } from "uuid";
 import ModalDayOff from "./ModalDayOff";
 import { jwtDecode } from "jwt-decode";
+import { setUserInfo } from "../GlobalRedux/reducers/user.reducer";
 
 const RequestOff = () => {
   const [isOpenModal, setIsOpenModal] = useState(false);
@@ -25,6 +26,8 @@ const RequestOff = () => {
   const [dataListInitial, setDataListInitial] = useState([]);
   const [dataNotifyInitial, setDataNotifyInitial] = useState([]);
   const userInfo = useSelector((state) => state.user.userInfo);
+  const [dataMemberInitial, setDataMemberInitial] = useState([]);
+  const dispatch = useDispatch();
 
   const handleRequestDayOff = () => {
     setIsOpenModal(true);
@@ -59,10 +62,26 @@ const RequestOff = () => {
         console.error("Đã xảy ra lỗi:", error);
 
       });
+
+    readData(SHEET_MEMBER)
+      .then((result) => {
+        setDataMemberInitial(result?.data?.values);
+        const jsonData = tableToJson(result?.data?.values);
+          jsonData.forEach((member) => {
+            if (member.email === data?.user.email) {
+              if(JSON.stringify(member) !== JSON.stringify(userInfo)) {
+                dispatch(setUserInfo(member));
+              }
+            }
+          });
+      })
+      .catch((error) => {
+        console.error("Đã xảy ra lỗi:", error);
+      });
   };
 
   useEffect(() => {
-    if (userInfo) {
+    if (userInfo && !isOpenModal) {
       getData();
     }
   }, [userInfo, isOpenModal]);
@@ -243,6 +262,7 @@ const RequestOff = () => {
         closeModal={closeModal}
         dataListInitial={dataListInitial}
         dataNotifyInitial={dataNotifyInitial}
+        dataMemberInitial={dataMemberInitial}
       />
       {loading && <Loading />}
     </div>

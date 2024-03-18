@@ -21,160 +21,192 @@ const Header = () => {
   const { data, update } = useSession();
   const router = useRouter();
   const [dataListInitial, setDataListInitial] = useState([]);
-  const [userInfo, setUserInfo] = useState(null);
-  const [dataList, setDataList] = useState([]);
-  const [dataListMember, setDataListMember] = useState([]);
   const [dataNotifyList, setDataNotifyList] = useState([]);
-  const [dataNotifyListMember, setDataNotifyListMember] = useState([]);
+  const [numberBadgeUnread, setNumberBadgeUnread] = useState([]);
   const listUserInfo = useSelector((state) => state.listUser.listUserInfo);
-  const userInformation = useSelector((state) => state.user.userInfo);
+  const userInfo = useSelector((state) => state.user.userInfo);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isPopoverOpenMember, setIsPopoverOpenMember] = useState(false);
+  const [pathPreious, setPathPrevivous] = useState('');
 
   const togglePopover = () => setIsPopoverOpen(!isPopoverOpen);
   const togglePopoverMember = () => setIsPopoverOpenMember(!isPopoverOpenMember);
+
+  useEffect(() => {
+   if(data && pathPreious !== pathname) {
+    setPathPrevivous(pathname);
+     readData(SHEET_MEMBER)
+      .then((result) => {
+        const jsonData = tableToJson(result?.data?.values);
+          jsonData.forEach((member) => {
+            if (member.email === data?.user.email) {
+              if(JSON.stringify(member) !== JSON.stringify(userInfo)) {
+                dispatch(setUserInfo(member));
+              }
+            }
+          });
+      })
+      .catch((error) => {
+        console.error("Đã xảy ra lỗi:", error);
+      });
+
+      getNotification()
+   }
+  }, [pathname, data])
+
 
   const clickNotify = () => {
     router.push('/manage-request')
     setIsPopoverOpen(false)
 
-    let originalLst = [...dataListInitial]
-    for (const row of originalLst) {
-      const requestDetail = dataList.find(request => request.id === row[0]);
-      if(requestDetail?.id) {
-        row[3] = true;
+    if(numberBadgeUnread.length != 0 ) {
+      let originalLst = [...dataListInitial]
+      for (const row of originalLst) {
+        const requestDetail = numberBadgeUnread.find(request => request.id === row[0]);
+        if(requestDetail?.id) {
+          row[3] = true;
+        }
       }
-    }
-
-    const dataRange = [
-      {
-        range: SHEET_NOTIFICATIONS,
-        values: originalLst,
-      },
-    ];
-
-    const callbacks = {
-      onSuccess: (newToken) => {
-        writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
-          .then((response) => {
-            console.log("write notification success");
-          })
-          .catch((error) => {
-            console.log("write notification fail");
-            console.log(error);
-          });
-      },
-      onFail: () => {
-        signOut();
+  
+      const dataRange = [
+        {
+          range: SHEET_NOTIFICATIONS,
+          values: originalLst,
+        },
+      ];
+  
+      const callbacks = {
+        onSuccess: (newToken) => {
+          writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
+            .then((response) => {
+              console.log("write notification success");
+              getNotification()
+            })
+            .catch((error) => {
+              console.log("write notification fail");
+              console.log(error);
+            });
+        },
+        onFail: () => {
+          signOut();
+        }
       }
+      updateData(callbacks, data, update)
     }
-    updateData(callbacks, data, update)
   }
 
   const clickCloseNotify = () => {
     setIsPopoverOpen(false)
 
-    let originalLst = [...dataListInitial]
-    for (const row of originalLst) {
-      const requestDetail = dataList.find(request => request.id === row[0]);
-      if(requestDetail?.id) {
-        row[3] = true;
+    if(numberBadgeUnread.length !== 0) {
+      let originalLst = [...dataListInitial]
+      for (const row of originalLst) {
+        const requestDetail = numberBadgeUnread.find(request => request.id === row[0]);
+        if(requestDetail?.id) {
+          row[3] = true;
+        }
       }
-    }
-
-    const dataRange = [
-      {
-        range: SHEET_NOTIFICATIONS,
-        values: originalLst,
-      },
-    ];
-
-    const callbacks = {
-      onSuccess: (newToken) => {
-        writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
-          .then((response) => {
-            console.log("Approve request success");
-          })
-          .catch((error) => {
-            console.log("Approve request fail");
-          });
-      },
-      onFail: () => {
-        signOut();
+  
+      const dataRange = [
+        {
+          range: SHEET_NOTIFICATIONS,
+          values: originalLst,
+        },
+      ];
+  
+      const callbacks = {
+        onSuccess: (newToken) => {
+          writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
+            .then((response) => {
+              console.log("write noti success");
+              getNotification()
+            })
+            .catch((error) => {
+              console.log("write noti fail");
+            });
+        },
+        onFail: () => {
+          signOut();
+        }
       }
+      updateData(callbacks, data, update)
     }
-    updateData(callbacks, data, update)
   }
 
   const clickNotifyMember = () => {
     router.push('/request-off')
     setIsPopoverOpenMember(false)
 
-    let originalLst = [...dataListInitial]
-    for (const row of originalLst) {
-      const requestDetail = dataListMember.find(request => request.id === row[0]);
-      if(requestDetail?.id) {
-        row[3] = true;
+    if(numberBadgeUnread.length != 0) {
+      let originalLst = [...dataListInitial]
+      for (const row of originalLst) {
+        const requestDetail = numberBadgeUnread.find(request => request.id === row[0]);
+        if(requestDetail?.id) {
+          row[3] = true;
+        }
       }
-    }
-
-    const dataRange = [
-      {
-        range: SHEET_NOTIFICATIONS,
-        values: originalLst,
-      },
-    ];
-
-    const callbacks = {
-      onSuccess: (newToken) => {
-        writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
-          .then((response) => {
-            console.log("Approve request success");
-          })
-          .catch((error) => {
-            console.log("Approve request fail");
-          });
-      }, 
-      onFail: () => {
-        signOut();
+  
+      const dataRange = [
+        {
+          range: SHEET_NOTIFICATIONS,
+          values: originalLst,
+        },
+      ];
+  
+      const callbacks = {
+        onSuccess: (newToken) => {
+          writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
+            .then((response) => {
+              console.log("Approve request success");
+            })
+            .catch((error) => {
+              console.log("Approve request fail");
+            });
+        }, 
+        onFail: () => {
+          signOut();
+        }
       }
+      updateData(callbacks, data, update)
     }
-    updateData(callbacks, data, update)
   }
 
   const clickCloseNotifyMember = () => {
     setIsPopoverOpenMember(false)
 
-    let originalLst = [...dataListInitial]
-    for (const row of originalLst) {
-      const requestDetail = dataListMember.find(request => request.id === row[0]);
-      if(requestDetail?.id) {
-        row[3] = true;
+    if(numberBadgeUnread.length != 0) {
+      let originalLst = [...dataListInitial]
+      for (const row of originalLst) {
+        const requestDetail = numberBadgeUnread.find(request => request.id === row[0]);
+        if(requestDetail?.id) {
+          row[3] = true;
+        }
       }
-    }
-
-    const dataRange = [
-      {
-        range: SHEET_NOTIFICATIONS,
-        values: originalLst,
-      },
-    ];
-
-    const callbacks = {
-      onSuccess: (newToken) => {
-        writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
-          .then((response) => {
-            console.log("Approve request success");
-          })
-          .catch((error) => {
-            console.log("Approve request fail");
-          });
-      },
-      onFail: () => {
-        signOut();
+  
+      const dataRange = [
+        {
+          range: SHEET_NOTIFICATIONS,
+          values: originalLst,
+        },
+      ];
+  
+      const callbacks = {
+        onSuccess: (newToken) => {
+          writeDataToMultipleSheets(newToken ? newToken : data.accessToken, dataRange)
+            .then((response) => {
+              console.log("Approve request success");
+              getNotification()
+            })
+            .catch((error) => {
+              console.log("Approve request fail");
+            });
+        },
+        onFail: () => {
+          signOut();
+        }
       }
+      updateData(callbacks, data, update)
     }
-    updateData(callbacks, data, update)
   }
 
   const popoverContent =
@@ -198,7 +230,7 @@ const Header = () => {
       <p>Notifications</p>
       <p onClick={() => clickCloseNotifyMember()} className="cursor-pointer">x</p>
     </div>
-    {dataNotifyListMember.slice().reverse()?.map((item, index) => (
+    {dataNotifyList.slice().reverse()?.map((item, index) => (
       <div key={item.id} className={`${item?.is_read ? `wrap-notify-box` : `wrap-notify-nonread`} px-4`}>
         <div className="notify-box p-4 leading-7" onClick={() => clickNotifyMember()}>
           <p className="">{item?.message} </p>
@@ -207,69 +239,38 @@ const Header = () => {
     ))}
   </div>;
 
-  useEffect(() => {
-    if ((data && !userInfo)|| data) {
-      readData(SHEET_MEMBER)
-        .then((result) => {
-          const jsonData = tableToJson(result?.data?.values);
-
-          const verifyEmail = jsonData.filter((member) => {
-            if (member.email === data?.user.email) {
-              localStorage.setItem('user info', JSON.stringify(member));
-              setUserInfo(member);
-              return true;
-            }
-          });
-
-          if (verifyEmail.length === 0) {
-            alert('Wrong email');
-            signOut();
-          }
-        })
-        .catch((error) => {
-          console.error('Đã xảy ra lỗi:', error);
-        });
-    }
-  }, [data]);
-
-  useEffect(() => {
-    if (userInformation) {
-      readData(SHEET_NOTIFICATIONS)
-      .then((result) => {
-        const jsonData = tableToJson(result?.data?.values);
-        setDataListInitial(result?.data?.values)
-        const listRequest = jsonData.filter(
+  const getNotification = () => {
+    readData(SHEET_NOTIFICATIONS)
+    .then((result) => {
+      const jsonData = tableToJson(result?.data?.values);
+      setDataListInitial(result?.data?.values)
+      if (userInfo?.role == 'admin') {
+        const numberUnread = jsonData.filter(
           (item) => !item.is_read && item.to == 'admin'
         );
         const listNotify = jsonData.filter(
           (item) => item.to == 'admin'
         );
-        for (const item of listRequest) {
-          const userFind = listUserInfo?.find(user => user.email === item.from) || { name: '' };
-          item.name = userFind.name;
-        }
-        setDataList(listRequest);
+        setNumberBadgeUnread(numberUnread);
+        console.log('set number ', numberUnread);
         setDataNotifyList(listNotify);
-
-        //for member
-        const listRequestMember = jsonData.filter(
+      } else {
+        const numberUnread = jsonData.filter(
           (item) => !item.is_read && item.to == data?.user.email
         );
-        const listNotifyMember = jsonData.filter(
+        const listNotify = jsonData.filter(
           (item) => item.to === data?.user.email
         );
-        for (const item of listRequestMember) {
-          const userFind = listUserInfo?.find(user => user.email === item.from) || { name: '' };
-          item.name = userFind.name;
-        }
-        setDataListMember(listRequestMember);
-        setDataNotifyListMember(listNotifyMember);
-      })
-      .catch((error) => {
-        console.error("Đã xảy ra lỗi:", error);
-      });
-    }
-  }, [userInfo]);
+        setNumberBadgeUnread(numberUnread);
+        console.log('set number ', numberUnread);
+        setDataNotifyList(listNotify);
+      }
+      
+    })
+    .catch((error) => {
+      console.error("Đã xảy ra lỗi:", error);
+    });
+  }
 
   return (
     <div className={`${(pathname !== '/manage-request' && pathname !== '/history-off'
@@ -293,7 +294,7 @@ const Header = () => {
       </div>}
       {userInfo?.role === "admin" ?
       <div className="align-end relative">
-        {dataList?.length == 0 ? <img
+        {numberBadgeUnread?.length == 0 ? <img
           src='/icon-notification.svg'
           alt="avatar"
           className="mr-4 shrink-0 bell-notify cursor-pointer"
@@ -306,7 +307,7 @@ const Header = () => {
             className="mr-4 shrink-0 bell-notify cursor-pointer"
             onClick={togglePopover}
           />
-          <p className="text-red-color font-semibold number-notify">{dataList?.length}</p>
+          <p className="text-red-color font-semibold number-notify">{numberBadgeUnread?.length}</p>
         </div>}
         <NotificationPopover
           isOpen={isPopoverOpen}
@@ -315,7 +316,7 @@ const Header = () => {
         />
       </div> :
       <div className="align-end relative">
-        {dataListMember?.length == 0 ?
+        {numberBadgeUnread?.length == 0 ?
         <img
           src='/icon-notification.svg'
           alt="avatar"
@@ -329,7 +330,7 @@ const Header = () => {
             className="mr-4 shrink-0 bell-notify cursor-pointer"
             onClick={togglePopoverMember}
           />
-          <p className="text-red-color font-semibold number-notify">{dataListMember?.length}</p>
+          <p className="text-red-color font-semibold number-notify">{numberBadgeUnread?.length}</p>
         </div>}
         <NotificationPopover
           isOpen={isPopoverOpenMember}

@@ -27,7 +27,7 @@ import {
   SHEET_REQUEST_OFF,
   REQUEST_STATUS,
   SHEET_MEMBER,
-  SHEET_NOTIFICATIONS
+  SHEET_NOTIFICATIONS,
 } from "@/constants";
 import { v4 as uuidv4 } from "uuid";
 import { setListRequest } from "../GlobalRedux/reducers/listRequest.reducer";
@@ -65,7 +65,7 @@ const ManageRequest = () => {
 
   const rejectDayOff = (item) => {
     setLoading(true);
-    let originalLst = [...dataListInitial];
+    const originalLst = dataListInitial.map(row => [...row]);
     for (const row of originalLst) {
       if (row[0] === item.id) {
         row[5] = REQUEST_STATUS.REJECT;
@@ -123,7 +123,7 @@ const ManageRequest = () => {
 
   const approveDayOff = (item) => {
     setLoading(true);
-    let originalLst = [...dataListInitial];
+    const originalLst = dataListInitial.map(row => [...row]);
     for (const row of originalLst) {
       if (row[0] === item.id) {
         row[5] = REQUEST_STATUS.APPROVE;
@@ -245,7 +245,7 @@ const ManageRequest = () => {
 
   const rejectAll = () => {
     setLoading(true);
-    let originalLst = [...dataListInitial];
+    const originalLst = dataListInitial.map(row => [...row]);
     for (const row of originalLst) {
       const requestDetail = dataList.find((request) => request.id === row[0]);
       if (requestDetail?.isChecked) {
@@ -307,7 +307,7 @@ const ManageRequest = () => {
 
   const approveAll = () => {
     setLoading(true);
-    let originalLst = [...dataListInitial];
+    const originalLst = dataListInitial.map(row => [...row]);
     const listChecked = [];
     for (const row of originalLst) {
       const requestDetail = dataList.find((request) => request.id === row[0]);
@@ -345,42 +345,35 @@ const ManageRequest = () => {
       rangeDayOffs.push({ range: range, values: [["O"]] });
     });
 
-    let memberList = [...dataMemberInitial];
+    const memberList = dataMemberInitial.map(row => [...row]);
     for (const row of memberList) {
       let requestDetails = dataList.filter(
         (request) => request.isChecked && request.email === row[2]
       );
 
-      const requestDetail = requestDetails.map((requestDetail) => {
-        if (requestDetail?.isChecked) {
-          const [startDateString, endDateString] =
-            requestDetail?.date.split("-");
+      requestDetails.forEach((requestDetail) => {
+        const [startDateString, endDateString] = requestDetail?.date.split("-");
+        const startDate = moment(startDateString, "DD/MM/YYYY");
+        const endDate = moment(endDateString, "DD/MM/YYYY");
+        const excludedDays = [0, 6]; // 0 là chủ nhật, 6 là thứ 7
 
-          // Chuyển đổi chuỗi ngày thành đối tượng Date
-          const startDate = moment(startDateString, "DD/MM/YYYY");
-          const endDate = moment(endDateString, "DD/MM/YYYY");
+        // Tính tổng số ngày sau khi loại bỏ thứ 7 và chủ nhật
+        const totalDays = countWeekdays(startDate, endDate, excludedDays);
 
-          // Các ngày cần loại bỏ (thứ 7 và chủ nhật)
-          const excludedDays = [0, 6]; // 0 là chủ nhật, 6 là thứ 7
+        const addOneDay = 1 * (endDateString ? totalDays : 1);
+        const addHalfDay = 0.5 * (endDateString ? totalDays : 1);
 
-          // Tính tổng số ngày sau khi loại bỏ thứ 7 và chủ nhật
-          const totalDays = countWeekdays(startDate, endDate, excludedDays);
-
-          const addOneDay = 1 * (endDateString ? totalDays : 1);
-          const addHalfDay = 0.5 * (endDateString ? totalDays : 1);
-
-          if (requestDetail.type === "2") {
-            if (!requestDetail.is_paid_leave) {
-              row[4] = Number(row[4]) + addOneDay;
-            } else {
-              row[3] = Number(row[3]) + addOneDay;
-            }
+        if (requestDetail.type === "2") {
+          if (!requestDetail.is_paid_leave) {
+            row[4] = `${parseFloat(row[4].replace(",", ".")) + addOneDay}`;
           } else {
-            if (!requestDetail.is_paid_leave) {
-              row[4] = Number(row[4]) + addHalfDay;
-            } else {
-              row[3] = Number(row[3]) + addHalfDay;
-            }
+            row[3] = `${parseFloat(row[3].replace(",", ".")) + addOneDay}`;
+          }
+        } else {
+          if (!requestDetail.is_paid_leave) {
+            row[4] = `${parseFloat(row[4].replace(",", ".")) + addHalfDay}`;
+          } else {
+            row[3] = `${parseFloat(row[3].replace(",", ".")) + addHalfDay}`;
           }
         }
       });

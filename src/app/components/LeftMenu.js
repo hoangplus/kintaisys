@@ -29,9 +29,10 @@ const LeftMenu = () => {
             if (member.email === data?.user.email) {
               dispatch(setUserInfo(member));
               return true;
+            } else {
+              return false;
             }
           });
-
           if (verifyEmail.length === 0) {
             alert("Wrong email");
             signOut();
