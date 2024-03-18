@@ -326,7 +326,7 @@ const ModalDayOff = ({
         request has been approved.
       </p>
       <div className="w-100 justify-center mb-5 wrap-box-modal p-5">
-        <div className="flex w-100 mb-5 place-items-center">
+        <div className="flex w-100 place-items-center">
           <p className="font-semibold mr-10">Hours</p>
           <select
             id="mySelect"
@@ -347,7 +347,7 @@ const ModalDayOff = ({
             </div>
           )}
         </div>
-        <div className="flex gap-10 mt-10 justify-between">
+        <div className="flex gap-10 mt-5 justify-between">
           <div className="flex">
             <p className="font-semibold mr-10">When</p>
             <div className="text-center mr-10">
@@ -393,47 +393,49 @@ const ModalDayOff = ({
           </div>
         </div>
 
-        <div className="ml-24 my-10 flex gap-5">
+        <div className="ml-24 my-5 flex gap-10">
           <div className="flex gap-2">
-            <input
-              type="radio"
-              value={selectedOptionRadio}
-              checked={selectedOptionRadio}
-              onChange={handleSelectChangeRadio}
-            />
-            <label>Paid leave</label>
+            <div className="flex gap-2 self-center">
+              <input
+                type="radio"
+                value={selectedOptionRadio}
+                checked={selectedOptionRadio}
+                onChange={handleSelectChangeRadio}
+              />
+              <label>Paid leave</label>
+            </div>
+            <div className="flex gap-2 self-center">
+              <input
+                type="radio"
+                value={!selectedOptionRadio}
+                checked={!selectedOptionRadio}
+                onChange={handleSelectChangeRadio}
+              />
+              <label>Unpaid leave</label>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <input
-              type="radio"
-              value={!selectedOptionRadio}
-              checked={!selectedOptionRadio}
-              onChange={handleSelectChangeRadio}
-            />
-            <label>Unpaid leave</label>
+          <div className="flex justify-center gap-20 my-5">
+            <button
+              onClick={addDayOff}
+              className="add-day flex text-white bg-blue-color uppercase py-[1rem] px-[2rem] rounded-2xl max-md:w-[20rem] mx-10"
+              disabled={!selectedOption || !textValue || !startDateFormat}
+            >
+              <img
+                className="mr-3"
+                src="/add.png"
+                alt="My Image"
+                width="12"
+                height="12"
+              />
+              Add day
+            </button>
           </div>
         </div>
 
-        <div className="flex justify-center gap-20 my-10">
-          <button
-            onClick={addDayOff}
-            className="add-day flex text-white bg-blue-color uppercase py-[1rem] px-[2rem] rounded-2xl max-md:w-[20rem] mx-10"
-            disabled={!selectedOption || !textValue || !startDateFormat}
-          >
-            <img
-              className="mr-3"
-              src="/add.png"
-              alt="My Image"
-              width="12"
-              height="12"
-            />
-            Add day
-          </button>
-        </div>
         <hr className="mb-10" />
         <div
           className={`wrap-custom-box gap-10 justify-start ${
-            items?.length > 0 && `p-8`
+            items?.length > 0 && `p-4`
           }`}
         >
           {items.map((item, index) => (
@@ -460,7 +462,7 @@ const ModalDayOff = ({
                   <p className="font-semibold">Date:</p>
                   <p className="">{item?.date}</p>
                 </div>
-                <div className="flex my-2 gap-3">
+                <div className="flex gap-3">
                   <p className="font-semibold">Reason:</p>
                   <p className="text-ellipsis">{item?.reason}</p>
                 </div>
